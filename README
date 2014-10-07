@@ -1,0 +1,9 @@
+Analytic computation of the number of lensed quasars that JPAS will be able to observe
+
+Future: prediction of the distribution of separation, prediction from the mock catalogues, prediction of the constrain on the cosmo
+
+lens.py: python routine to compute the number of lensed qsos.
+
+Started 09/2014 in Sao Paulo
+Irene Balmes
+contact: irene.balmes@normalesup.org
