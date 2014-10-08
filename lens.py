@@ -19,10 +19,10 @@ def quasarluminosity(M,z):
     ksi = 4.05
     z_star = 1.60
     beta = -1.45
-    if z < 3:
-        alpha = -3.31
-    else:
+    if z > 3:
         alpha = -2.58
+    else:
+        alpha = -3.31
 
     h = 0.72 # Hubble's constant value taken in Oguri & Marshall
 
@@ -31,9 +31,12 @@ def quasarluminosity(M,z):
                                                +np.sqrt(np.exp(ksi*z_star)))**2
     M_star = -20.90+5*np.log10(h)-2.5*np.log10(f)
 
-    diff = np.log10(Phi_star/(10**(0.4*(alpha+1)*(M-M_star)) \
-                     +10**(0.4*(beta+1)*(M-M_star))))
-    
+    diff = Phi_star/(10**(0.4*(alpha+1)*(M-M_star)) \
+                     +10**(0.4*(beta+1)*(M-M_star)))
+
+    # the result is in h**3/mag/Mpc**3. Is it necessary to multiply it by h**3 
+    # before using it???
+
     return diff
 
 def velocitydispersion(v,dv):
@@ -43,7 +46,7 @@ def velocitydispersion(v,dv):
     v -- velocity at which to compute the number of galaxies.
     dv -- velocity interval.
     Outputs:
-    diff -- dn/dv.
+    diff -- number density of lenses per interval dv at v.
     """
     # parameters
     Phi_star = 8e-3 # units (h/Mpc)^3
@@ -54,10 +57,13 @@ def velocitydispersion(v,dv):
     diff = Phi_star*(v/v_star)**alpha*np.exp(-(v/v_star)**beta)* \
         beta/math.gamma(alpha/beta)*dv/v
 
+    # There seems to be a factor 100 difference between this and 
+    # the result in Choi et al 2006. WHY???
+
     return diff
 
 def lensingcrosssection():
-    """TO BE DONE """
+    """TO BE DONE"""
 
     return 1
 
@@ -77,12 +83,17 @@ def lensingprobability(zs,M):
     h = 0.72 # *100 km/s.Mpc = Hubble's constant
     c = 299792.458 # km/s
 
+    # conversion from arcseconds to radian
+    arcsectorad = 4.85e-6
+
     # integration over Theta
     nbin_theta = 100
-    theta_min = 1 # PSF of JPAS is about 1 arcsecond
-    theta_max = 4 # we don't expect new lenses 
+    theta_min = 1. # PSF of JPAS is about 1 arcsecond
+    theta_max = 4. # we don't expect new lenses 
                   # with separation above 4 arcseconds
     theta = theta_min+np.arange(nbin_theta)*(theta_max-theta_min)/(nbin_theta-1)
+    # theta in radians
+    theta = arcsectorad*theta
     dtheta = theta[1]-theta[0]
 
     # this array will contain the function to integrate over theta
@@ -112,6 +123,7 @@ def lensingprobability(zs,M):
         diffvtheta = c/2*np.sqrt(ds/(4*np.pi*dls*t))
 
         # velocity corresponding to the given theta
+        # same units as c, km/s
         v = c*np.sqrt(ds*t/(4*np.pi*dls))
         # dv corresponding to dtheta
         dv = diffvtheta*dtheta
@@ -119,13 +131,18 @@ def lensingprobability(zs,M):
 
         # biased lensing cross-section
         sigma_l = lensingcrosssection()
-        
+
         # result of the integration over the redshift
         integrand_z = volume*vdisp*diffvtheta*sigma_l 
         integral = np.trapz(integrand_z,zl)
+
         integrand.append(integral)
 
     integral_theta = np.trapz(integrand,theta)
+
+    print integral_theta
+    plt.plot(theta,integrand)
+    plt.show()
 
     return integral_theta
 
