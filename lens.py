@@ -57,7 +57,9 @@ def velocitydispersion(v,dv):
     return diff
 
 def lensingcrosssection():
-    """ """
+    """TO BE DONE """
+
+    return 1
 
 def lensingprobability(zs,M):
     """Compute the lensing probability for a QSO at redshift zs, magnitude M.
@@ -68,7 +70,65 @@ def lensingprobability(zs,M):
     Outputs:
     p -- probability that the quasar is lensed.
     """
-    
+    # cosmological parameters
+    Omega_m = 0.3
+    Omega_L = 1-Omega_m
+    w = -1
+    h = 0.72 # *100 km/s.Mpc = Hubble's constant
+    c = 299792.458 # km/s
+
+    # integration over Theta
+    nbin_theta = 100
+    theta_min = 1 # PSF of JPAS is about 1 arcsecond
+    theta_max = 4 # we don't expect new lenses 
+                  # with separation above 4 arcseconds
+    theta = theta_min+np.arange(nbin_theta)*(theta_max-theta_min)/(nbin_theta-1)
+    dtheta = theta[1]-theta[0]
+
+    # this array will contain the function to integrate over theta
+    integrand = []
+
+    # for the integration over redshift zl
+    # quantities independant from theta
+    nbin = 100
+    # in order to avoid nans (dls = 0), zl must never be equal to zs
+    zl = np.arange(nbin)*np.float(zs)/nbin
+
+    hl = h*100*np.sqrt(Omega_m*(1+zl)**3+Omega_L*(1+zl)**(-3*(1+w)))
+    volume = (1+zl)**2*c/hl
+
+    ds = distance(zs)
+    dls = []
+    for z in zl:
+        dls.append(distance(zs,z))
+    dls = np.array(dls)
+
+    for t in theta:
+        # The relation between the velocity dispersion
+        # and the angular separation comes (I assume) from the 
+        # Einstein radius relation
+        # Theta_E = 4pi(v/c)**2*D_ls/D_s
+        # Therefore dv/dTheta is given by the following relation
+        diffvtheta = c/2*np.sqrt(ds/(4*np.pi*dls*t))
+
+        # velocity corresponding to the given theta
+        v = c*np.sqrt(ds*t/(4*np.pi*dls))
+        # dv corresponding to dtheta
+        dv = diffvtheta*dtheta
+        vdisp = velocitydispersion(v,dv)
+
+        # biased lensing cross-section
+        sigma_l = lensingcrosssection()
+        
+        # result of the integration over the redshift
+        integrand_z = volume*vdisp*diffvtheta*sigma_l 
+        integral = np.trapz(integrand_z,zl)
+        integrand.append(integral)
+
+    integral_theta = np.trapz(integrand,theta)
+
+    return integral_theta
+
 def distance(z1,z2=0):
     """Compute the angular diameter distance between redshifts z1 and z2.
 
@@ -83,13 +143,20 @@ def distance(z1,z2=0):
     Omega_m = 0.3
     Omega_L = 1-Omega_m
     w = -1
+    h = 0.72 # *100 km/s.Mpc = Hubble's constant
+    c = 299792.458 # km/s
 
-    astart = 1/(1+z1)
-    aend = 1/(1+z2)
+    astart = 1./(1+z1)
+    aend = 1./(1+z2)
 
     # fonction to integrate
-    
+    nbin = 1000
+    a = astart+np.arange(nbin)*(aend-astart)/(nbin-1)
     rgral = np.sqrt(Omega_m*a+Omega_L*a**(3*(1+w)+4))
+
+    d = np.trapz(1./rgral,x=a)*astart*c/(100*h) #in Mpc
+
+    return d
 
 def lensingbyredshift(zs,Mmax):
     """Compute the expected number of lenses in a slice of redshift.
@@ -101,20 +168,28 @@ def lensingbyredshift(zs,Mmax):
     """
     nbin = 200
     Mmin = -30 
+    # cosmological parameters
+    Omega_m = 0.3
+    Omega_L = 1-Omega_m
+    w = -1
+    c = 299792.458 # km/s
+    h = 0.72 
+
     # the density of quasars there should be below 1e-9 per
     # magnitude per Mpc^3.
     M = np.arange(nbin)*(Mmax-Mmin)/(nbin-1)+Mmin
     
     # luminosity function
     luminosity = quasarluminosity(M,zs)
-
+    
     # volume factor
     area = 2.5 # survey area in steradian. 8000 to 9000 square degrees
     dist = distance(zs)
-    volume = area*dist**2*c*(1+zs)**3.....
+    hs = h*100*np.sqrt(Omega_m*(1+zs)**3+Omega_L*(1+zs)**(-3*(1+w)))
+    volume = area*dist**2*(1+zs)**2*c/hs
     
     p = lensingprobability(zs,M)
-
+    
     integrand = luminosity*volume*p
 
     nlens = np.trapz(integrand,M)
@@ -133,7 +208,9 @@ def numberoflenses(zmax,Mmax):
     nbin = 200
     zs = np.arange(nbin)*zmax/(nbin-1)
     
-    integrand = lensingbyredshift(zs,Mmax)
+    integrand = []
+    for z in zs:
+        integrand.append(lensingbyredshift(z,Mmax))
     N = np.trapz(integrand,zs)
 
     return N
