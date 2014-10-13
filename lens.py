@@ -62,8 +62,16 @@ def velocitydispersion(v,dv):
 
     return diff
 
-def lensingcrosssection():
-    """TO BE DONE"""
+def lensingcrosssection(theta):
+    """Find the biased lensing cross-section for angular separation theta.
+
+    Interpolate from a pre-computed table.
+    Arguments:
+    theta -- Einstein radius for which the biased cross-section is needed.
+    Outputs:
+    sigma -- biased lensing cross-section, precomputed with gravlens.
+    """
+
 
     return 1
 
@@ -76,6 +84,7 @@ def lensingprobability(zs,M):
     Outputs:
     p -- probability that the quasar is lensed.
     """
+
     # cosmological parameters
     Omega_m = 0.3
     Omega_L = 1-Omega_m
@@ -130,7 +139,7 @@ def lensingprobability(zs,M):
         vdisp = velocitydispersion(v,dv)
 
         # biased lensing cross-section
-        sigma_l = lensingcrosssection()
+        sigma_l = lensingcrosssection(t)
 
         # result of the integration over the redshift
         integrand_z = volume*vdisp*diffvtheta*sigma_l 
@@ -140,9 +149,9 @@ def lensingprobability(zs,M):
 
     integral_theta = np.trapz(integrand,theta)
 
-    print integral_theta
-    plt.plot(theta,integrand)
-    plt.show()
+#    print integral_theta
+#    plt.plot(theta,integrand)
+#    plt.show()
 
     return integral_theta
 
@@ -184,7 +193,7 @@ def lensingbyredshift(zs,Mmax):
     nlens -- dN/dzs, number of expected lenses by interval of source redshift.
     """
     nbin = 200
-    Mmin = -30 
+    Mmin = -30. 
     # cosmological parameters
     Omega_m = 0.3
     Omega_L = 1-Omega_m
@@ -205,7 +214,9 @@ def lensingbyredshift(zs,Mmax):
     hs = h*100*np.sqrt(Omega_m*(1+zs)**3+Omega_L*(1+zs)**(-3*(1+w)))
     volume = area*dist**2*(1+zs)**2*c/hs
     
-    p = lensingprobability(zs,M)
+    p = []
+    for mag in M:
+        p.append(lensingprobability(zs,mag))
     
     integrand = luminosity*volume*p
 
@@ -222,12 +233,16 @@ def numberoflenses(zmax,Mmax):
     Outputs:
     N -- number of lenses expected to be observed by JPAS.
     """
-    nbin = 200
-    zs = np.arange(nbin)*zmax/(nbin-1)
+    nbin = 20
+    zmin = 0.1 #zs must not be 0
+    zs = zmin+np.arange(nbin)*np.float(zmax-zmin)/(nbin-1)
     
     integrand = []
+    k = 0
     for z in zs:
         integrand.append(lensingbyredshift(z,Mmax))
+        k = k+1
+        print k,'/',nbin
     N = np.trapz(integrand,zs)
 
     return N
