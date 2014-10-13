@@ -2,6 +2,8 @@ Analytic computation of the number of lensed quasars that JPAS will be able to o
 
 Future: prediction of the distribution of separation, prediction from the mock catalogues, prediction of the constrain on the cosmo
 
+draw_gravlens.py: routine to initialize gravlens files to run a Monte Carlo to compute the biased lensing cross-section.
+
 lens.py: python routine to compute the number of lensed qsos.
 
 Started 09/2014 in Sao Paulo
