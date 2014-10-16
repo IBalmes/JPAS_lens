@@ -6,6 +6,8 @@ draw_gravlens.py: routine to initialize gravlens files to run a Monte Carlo to c
 
 lens.py: python routine to compute the number of lensed qsos.
 
+lensingcrosssection.py: runs all the routine to output a table of biased lensing cross-sections as a function of magnitude and redshift of the source, velocity dispersion and redshift of the lens.
+
 Started 09/2014 in Sao Paulo
 Irene Balmes
 contact: irene.balmes@normalesup.org

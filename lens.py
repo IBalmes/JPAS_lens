@@ -62,15 +62,19 @@ def velocitydispersion(v,dv):
 
     return diff
 
-def lensingcrosssection(theta):
-    """Find the biased lensing cross-section for angular separation theta.
+def lensingcrosssection(v,zl,zs,M):
+    """Find the biased lensing cross-section for v, zl, zs.
 
     Interpolate from a pre-computed table.
     Arguments:
-    theta -- Einstein radius for which the biased cross-section is needed.
+    v -- velocity dispersion of the lens.
+    zl -- redshift of the lens.
+    zs -- redshift of the source.
+    M -- magnitude of the source.
     Outputs:
     sigma -- biased lensing cross-section, precomputed with gravlens.
     """
+    #from v, zl, zs, compute the corresponding theta. Use this in the table.
 
 
     return 1
@@ -139,7 +143,8 @@ def lensingprobability(zs,M):
         vdisp = velocitydispersion(v,dv)
 
         # biased lensing cross-section
-        sigma_l = lensingcrosssection(t)
+        # can lensingcrosssection take an array for zl???
+        sigma_l = lensingcrosssection(v,zl,zs)
 
         # result of the integration over the redshift
         integrand_z = volume*vdisp*diffvtheta*sigma_l 
