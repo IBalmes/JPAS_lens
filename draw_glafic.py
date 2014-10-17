@@ -53,7 +53,7 @@ def write_initfile(v,zl,zs):
     Outputs:
     tonnes of files
     """
-    nlens = 1000#00
+    nlens = 10#000#0
     c = 299792.458 # km/s
     arcsectorad = 4.85e-6
     thetaE = 4*np.pi*(v/c)**2*l.distance(zs,zl)/l.distance(zs)
@@ -93,7 +93,7 @@ def write_initfile(v,zl,zs):
 
 def write_script():
     """Write the script to run gravlens with the initial files."""
-    nlens = 1000#00
+    nlens = 10#000#0
 
     file = 'script_gl'
     f = open(file,'w')
@@ -112,7 +112,7 @@ def analyse_output(M,zs):
     Outputs:
     sigma -- biased lensing cross-section computed from glafic output files.
     """
-    nlens = 1000#00
+    nlens = 10#000#0
 
     # array containing the magnification, and number of multiply imaged lenses
     mu = []

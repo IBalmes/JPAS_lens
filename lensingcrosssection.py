@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import draw_glafic as gl
 import lens as l
 import os
+#import multiprocessing
 
 def main():
     """Fills the table of biased lensing cross-section.
@@ -15,17 +16,17 @@ def main():
     Outputs:
     """
     nbin = 10#000
-
+    
     maxmag = -20
     minmag = -29
-    mag = [-25]#np.linspace(minmag,maxmag,nbin)
+    mag = np.linspace(minmag,maxmag,nbin)
 
-    maxz = 5
     minz = 0.1
+    maxz = 5
     z = np.linspace(minz,maxz,nbin)
 
-    maxv = 10**2.6
     minv = 10**1.6
+    maxv = 10**2.6
     vel = np.linspace(minv,maxv,nbin)
 
     # writing the script for galfic once and for all
@@ -43,7 +44,7 @@ def main():
         for zs in zrange:
             for v in vel:
                 gl.write_initfile(v,zl,zs)
-                os.system("./script_gl")
+                os.system('./script_gl')
                 thetaE.append(4*np.pi*(v/c)**2*l.distance(zs,zl)/l.distance(zs))
                 for M in mag:
                     sigma = gl.analyse_output(M,zs)
@@ -53,6 +54,3 @@ def main():
                     f.write(line)
 
     f.close()
-                    
-    plt.plot(thetaE,sig,'.')
-    plt.show()
