@@ -53,7 +53,7 @@ def write_initfile(v,zl,zs):
     Outputs:
     tonnes of files
     """
-    nlens = 10#000#0
+    nlens = 1000#00
     c = 299792.458 # km/s
     arcsectorad = 4.85e-6
     thetaE = 4*np.pi*(v/c)**2*l.distance(zs,zl)/l.distance(zs)
@@ -61,7 +61,7 @@ def write_initfile(v,zl,zs):
     # converting to arcseconds
     thetaE = thetaE/arcsectorad
     e,gamma,theta_g,x,y = draw_lensparam(nlens,thetaE)
-    print thetaE
+    #print thetaE
 
     for i in range(nlens):
         file = 'init_gl/lens_'+str(i)+'.in'
@@ -93,7 +93,7 @@ def write_initfile(v,zl,zs):
 
 def write_script():
     """Write the script to run gravlens with the initial files."""
-    nlens = 10#000#0
+    nlens = 1000#00
 
     file = 'script_gl'
     f = open(file,'w')
@@ -102,23 +102,24 @@ def write_script():
                +str(i)+'.out\n'
         f.write(line)
 
-def analyse_output(M,zs):
+def analyse_output(M,zs,start=0):
     """Using the files output by glafic, compute the lensing cross-section.
 
     Arguments:
     M -- magnitude of the source.
     zs -- redshift of the source.
-    nlens -- number of lenses to take into account
+    start -- first lens to take into account. optional parameter for error
+    evaluation purpose.
     Outputs:
     sigma -- biased lensing cross-section computed from glafic output files.
     """
-    nlens = 10#000#0
+    nlens = 1000#00
 
     # array containing the magnification, and number of multiply imaged lenses
     mu = []
     mutmp = []
     nmult = 0
-    for i in range(nlens):
+    for i in range(start,start+nlens):
         file = 'init_gl/lens_'+str(i)+'.out'
         f = open(file,'r')
         line = f.readline()
@@ -130,9 +131,10 @@ def analyse_output(M,zs):
             mutmp.append(abs(float(image1.split()[8])))
             mutmp.append(abs(float(image2.split()[8])))
             mutmp.sort()
-            if mutmp[0]/mutmp[1]>0.1:
-                nmult = nmult+1
-                mu.append(mutmp[0]) # faintest image
+            #if mutmp[0]/mutmp[1]>0.1: 
+            # in the end, no condition is necessary there
+            nmult = nmult+1
+            mu.append(mutmp[0]) # faintest image
             mutmp = []
         if image_number == 3:
             # naked cusp case
@@ -180,5 +182,23 @@ def analyse_output(M,zs):
         sigma = 0
     else:
         sigma = sigma/nmult
+
+    return sigma
+
+def error_on_sigma(M,zs):
+    """Evaluate the error on sigma obtained by MCMC integration.
+    
+    Arguments:
+    M -- magnitude.
+    zs -- redshift of the source.
+    """
+
+    ntry = 200
+    sigma = []
+    for j in range(ntry):
+        sigma.append(analyse_output(M,zs,j*500))
+        
+    plt.hist(sigma)
+    plt.show()
 
     return sigma

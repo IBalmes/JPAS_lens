@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math as math
+from scipy.interpolate import griddata
 
 def quasarluminosity(M,z):
     """Compute dPhi/dM for QSOs at redshift z.
@@ -74,10 +75,22 @@ def lensingcrosssection(v,zl,zs,M):
     Outputs:
     sigma -- biased lensing cross-section, precomputed with gravlens.
     """
-    #from v, zl, zs, compute the corresponding theta. Use this in the table.
+    file = 'crosssection.dat'
+    f = open(file,'r')
+    lines = f.readlines()
+    nline = len(lines)
+    points = np.zeros(shape=(nline,4))
+    sigtable = np.zeros(nline)
+    for i in range(nline):
+        points[i,0] = float(lines[i].split()[0])
+        points[i,1] = float(lines[i].split()[1])
+        points[i,2] = float(lines[i].split()[2])
+        points[i,3] = float(lines[i].split()[3])
+        sigtable[i] = float(lines[i].split()[4])
 
+    sigma = griddata(points, sigtable, (zs,zl,v,M), method='linear')
 
-    return 1
+    return sigma
 
 def lensingprobability(zs,M):
     """Compute the lensing probability for a QSO at redshift zs, magnitude M.
