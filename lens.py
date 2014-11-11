@@ -40,26 +40,28 @@ def quasarluminosity(M,z):
 
     return diff
 
-def velocitydispersion(v,dv):
+def velocitydispersion(v):
     """Compute the velocity function of early-type galaxies.
 
     Arguments:
     v -- velocity at which to compute the number of galaxies.
-    dv -- velocity interval.
     Outputs:
-    diff -- number density of lenses per interval dv at v.
+    diff -- number density of lenses at v.
     """
     # parameters
     Phi_star = 8e-3 # units (h/Mpc)^3
-    v_star = 161 # units km/s
+    v_star = 161. # units km/s
     alpha = 2.32
     beta = 2.67
 
-    diff = Phi_star*(v/v_star)**alpha*np.exp(-(v/v_star)**beta)* \
-        beta/math.gamma(alpha/beta)*dv/v
+    x = v/v_star
+    norm = Phi_star*beta/math.gamma(alpha/beta)
 
-    # There seems to be a factor 100 difference between this and 
+    diff = norm*(x**alpha)*np.exp(-(x**beta))/v
+
+    # There seems to be a factor 3 difference between this and 
     # the result in Choi et al 2006. WHY???
+    # It also appears to drop much too quickly.
 
     return diff
 
@@ -153,7 +155,7 @@ def lensingprobability(zs,M):
         v = c*np.sqrt(ds*t/(4*np.pi*dls))
         # dv corresponding to dtheta
         dv = diffvtheta*dtheta
-        vdisp = velocitydispersion(v,dv)
+        vdisp = velocitydispersion(v)#,dv)
 
         # biased lensing cross-section
         # can lensingcrosssection take an array for zl???
