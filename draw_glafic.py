@@ -53,7 +53,7 @@ def write_initfile(v,zl,zs):
     Outputs:
     tonnes of files
     """
-    nlens = 1000#00
+    nlens = 500#0#00
     c = 299792.458 # km/s
     arcsectorad = 4.85e-6
     thetaE = 4*np.pi*(v/c)**2*l.distance(zs,zl)/l.distance(zs)
@@ -93,7 +93,7 @@ def write_initfile(v,zl,zs):
 
 def write_script():
     """Write the script to run gravlens with the initial files."""
-    nlens = 1000#00
+    nlens = 500#00
 
     file = 'script_gl'
     f = open(file,'w')
@@ -113,7 +113,7 @@ def analyse_output(M,zs,start=0):
     Outputs:
     sigma -- biased lensing cross-section computed from glafic output files.
     """
-    nlens = 1000#00
+    nlens = 500#00
 
     # array containing the magnification, and number of multiply imaged lenses
     mu = []
@@ -163,25 +163,25 @@ def analyse_output(M,zs,start=0):
             mu.append(mutmp[1]) # third brightest image
             mutmp = []
 
-    mu = np.array(mu)
-    mag = M+2.5*np.log10(mu)
-
-    # absolute i-band magnitude luminosity function
-    lumfunction = l.quasarluminosity(mag,zs)
-    lumfunction_nomag = l.quasarluminosity(M,zs)
-
-    sigma = 0
-    sigtmp = []
-    var = []
-    for i in range(nmult):
-        lumratio = lumfunction[i]/lumfunction_nomag
-        var.append(lumratio/mu[i])
-        sigma = sigma+lumratio/mu[i]
-        sigtmp.append(sigma/(i+1))
-
-    if nmult == 0:
-        sigma = 0
+    if nmult==0:
+        sigma = np.zeros(len(M))
     else:
+        mu = np.array(mu)
+        mag = np.zeros((len(M),nmult))        
+        mag = [[magnitude+2.5*np.log10(magnification) for magnitude in M] 
+               for magnification in mu]
+        
+        # absolute i-band magnitude luminosity function
+        lumfunction = l.quasarluminosity(mag,zs)
+        lumfunction_nomag = l.quasarluminosity(M,zs)
+        
+        sigma = 0
+        for i in range(nmult):
+            # lumratio should naturally be a vector of length len(M)
+            lumratio = lumfunction[i]/lumfunction_nomag
+            # sigma should also be a vector of lenght len(m)
+            sigma = sigma+lumratio/mu[i]
+
         sigma = sigma/nmult
 
     return sigma

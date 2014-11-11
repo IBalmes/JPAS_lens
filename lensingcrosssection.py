@@ -15,12 +15,12 @@ def main():
     Arguments:
     Outputs:
     """
-    nbin = 20
+    nbin = 40
     nbinM = 10
     
     maxmag = -20
     minmag = -29
-    mag = np.linspace(minmag,maxmag,nbin)    
+    mag = np.linspace(minmag,maxmag,nbinM)    
     minz = 0.1
     maxz = 5
     z = np.linspace(minz,maxz,nbin)
@@ -40,9 +40,9 @@ def main():
             for v in vel:
                 gl.write_initfile(v,zl,zs)
                 os.system('./script_gl > /dev/null 2>&1')
-                sigma = gl.analyse_output(M,zs)
+                sigma = gl.analyse_output(mag,zs)
                 for i in range(nbinM):
-                    line = str(zs)+' '+str(zl)+' '+str(v)+' '+str(M[i])+' '\
+                    line = str(zs)+' '+str(zl)+' '+str(v)+' '+str(mag[i])+' '\
                            +str(sigma[i])+'\n'
                     f.write(line)
 
