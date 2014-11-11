@@ -106,7 +106,7 @@ def analyse_output(M,zs,start=0):
     """Using the files output by glafic, compute the lensing cross-section.
 
     Arguments:
-    M -- magnitude of the source.
+    M -- magnitude of the image.
     zs -- redshift of the source.
     start -- first lens to take into account. optional parameter for error
     evaluation purpose.
@@ -178,6 +178,7 @@ def analyse_output(M,zs,start=0):
         var.append(lumratio/mu[i])
         sigma = sigma+lumratio/mu[i]
         sigtmp.append(sigma/(i+1))
+
     if nmult == 0:
         sigma = 0
     else:
@@ -189,7 +190,7 @@ def error_on_sigma(M,zs):
     """Evaluate the error on sigma obtained by MCMC integration.
     
     Arguments:
-    M -- magnitude.
+    M -- magnitude of the image.
     zs -- redshift of the source.
     """
 

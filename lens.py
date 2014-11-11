@@ -97,7 +97,7 @@ def lensingprobability(zs,M):
 
     Arguments:
     zs -- redshift of the source quasar.
-    M -- magnitude of the quasar.
+    M -- magnitude of the lensed quasar.
     Outputs:
     p -- probability that the quasar is lensed.
     """
@@ -157,7 +157,7 @@ def lensingprobability(zs,M):
 
         # biased lensing cross-section
         # can lensingcrosssection take an array for zl???
-        sigma_l = lensingcrosssection(v,zl,zs)
+        sigma_l = lensingcrosssection(v,zl,zs,M)
 
         # result of the integration over the redshift
         integrand_z = volume*vdisp*diffvtheta*sigma_l 
@@ -207,6 +207,7 @@ def lensingbyredshift(zs,Mmax):
 
     Arguments:
     zs -- source redshift.
+    Mmax -- maximum magnitude of the survey.
     Outputs:
     nlens -- dN/dzs, number of expected lenses by interval of source redshift.
     """
@@ -221,6 +222,7 @@ def lensingbyredshift(zs,Mmax):
 
     # the density of quasars there should be below 1e-9 per
     # magnitude per Mpc^3.
+    # M is the magnitude of the lensed quasar.
     M = np.arange(nbin)*(Mmax-Mmin)/(nbin-1)+Mmin
     
     # luminosity function
