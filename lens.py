@@ -60,7 +60,7 @@ def velocitydispersion(v):
     diff = norm*(x**alpha)*np.exp(-(x**beta))/v
 
     # There seems to be a factor 3 difference between this and 
-    # the result in Choi et al 2006. WHY???
+    # the result in Choi et al 2007. WHY???
     # It also appears to drop much too quickly.
 
     return diff
@@ -90,7 +90,21 @@ def lensingcrosssection(v,zl,zs,M):
         points[i,3] = float(lines[i].split()[3])
         sigtable[i] = float(lines[i].split()[4])
 
-    sigma = griddata(points, sigtable, (zs,zl,v,M), method='linear')
+    sigma = griddata(points, sigtable, (zs,zl,v,M), method='nearest')
+
+    # while crosssection.dat has not been updated...
+    nlens = 500#00
+
+    c = 299792.458 # km/s
+    arcsectorad = 4.85e-6
+    thetaE = 4*np.pi*(v/c)**2*distance(zs,zl)/distance(zs)
+    # the above formula gives thetaE in radian
+    # converting to arcseconds
+    thetaE = thetaE/arcsectorad
+    # this is the area in the source plane being probed by the MCMC code
+    area = 4*thetaE**2
+
+    sigma = sigma*area/nlens #!this is actually wrong... need to know nmult?
 
     return sigma
 
@@ -122,7 +136,7 @@ def lensingprobability(zs,M):
     theta = theta_min+np.arange(nbin_theta)*(theta_max-theta_min)/(nbin_theta-1)
     # theta in radians
     theta = arcsectorad*theta
-    dtheta = theta[1]-theta[0]
+    #dtheta = theta[1]-theta[0]
 
     # this array will contain the function to integrate over theta
     integrand = []
@@ -154,16 +168,24 @@ def lensingprobability(zs,M):
         # same units as c, km/s
         v = c*np.sqrt(ds*t/(4*np.pi*dls))
         # dv corresponding to dtheta
-        dv = diffvtheta*dtheta
+        #dv = diffvtheta*dtheta
         vdisp = velocitydispersion(v)#,dv)
 
         # biased lensing cross-section
         # can lensingcrosssection take an array for zl???
-        sigma_l = lensingcrosssection(v,zl,zs,M)
+        # It seems that yes
+        sigma_l = []
+        for z in zl:
+            sigma_l.append(lensingcrosssection(v,z,zs,M))
+        sigma_l = np.array(sigma_l)
 
         # result of the integration over the redshift
         integrand_z = volume*vdisp*diffvtheta*sigma_l 
         integral = np.trapz(integrand_z,zl)
+
+#        print integral
+#        plt.plot(zl,integrand_z)
+#        plt.show()
 
         integrand.append(integral)
 

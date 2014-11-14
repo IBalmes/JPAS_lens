@@ -53,7 +53,7 @@ def write_initfile(v,zl,zs):
     Outputs:
     tonnes of files
     """
-    nlens = 500#0#00
+    nlens = 1000#00
     c = 299792.458 # km/s
     arcsectorad = 4.85e-6
     thetaE = 4*np.pi*(v/c)**2*l.distance(zs,zl)/l.distance(zs)
@@ -93,7 +93,7 @@ def write_initfile(v,zl,zs):
 
 def write_script():
     """Write the script to run gravlens with the initial files."""
-    nlens = 500#00
+    nlens = 1000#00
 
     file = 'script_gl'
     f = open(file,'w')
@@ -102,18 +102,29 @@ def write_script():
                +str(i)+'.out\n'
         f.write(line)
 
-def analyse_output(M,zs,start=0):
+def analyse_output(M,zs,zl,v,start=0):
     """Using the files output by glafic, compute the lensing cross-section.
 
     Arguments:
     M -- magnitude of the image.
     zs -- redshift of the source.
+    zl -- redshift of the lens.
+    v -- velocity dispersion of the lens.
     start -- first lens to take into account. optional parameter for error
     evaluation purpose.
     Outputs:
     sigma -- biased lensing cross-section computed from glafic output files.
     """
-    nlens = 500#00
+    nlens = 1000#00
+
+    c = 299792.458 # km/s
+    arcsectorad = 4.85e-6
+    thetaE = 4*np.pi*(v/c)**2*l.distance(zs,zl)/l.distance(zs)
+    # the above formula gives thetaE in radian
+    # converting to arcseconds
+    thetaE = thetaE/arcsectorad
+    # this is the area in the source plane being probed by the MCMC code
+    area = 4*thetaE**2
 
     # array containing the magnification, and number of multiply imaged lenses
     mu = []
@@ -182,7 +193,9 @@ def analyse_output(M,zs,start=0):
             # sigma should also be a vector of lenght len(m)
             sigma = sigma+lumratio/mu[i]
 
-        sigma = sigma/nmult
+        # Wait... How does sigma have dimensions of area? 
+        # How is it the right units? 
+        sigma = sigma*area/nlens
 
     return sigma
 

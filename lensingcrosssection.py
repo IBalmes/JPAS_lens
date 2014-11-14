@@ -16,7 +16,7 @@ def main():
     Outputs:
     """
     nbin = 40
-    nbinM = 10
+    nbinM = 100
     
     maxmag = -20
     minmag = -29
@@ -76,20 +76,14 @@ def test():
     npts = npts/nbin
 
     # checking lensing cross section against velocity dispersion
-    '''
+    #'''
     for i in range(npts):
         for k in range(nbin):
-            zl = [points[i*nbin**2+j*nbin+k,0] for j in range(nbin)]
-            zs = [points[i*nbin**2+j*nbin+k,1] for j in range(nbin)]
-            M = [points[i*nbin**2+j*nbin+k,3] for j in range(nbin)]
-            print zl
-            print zs
-            print M
             vel = [points[i*nbin**2+j*nbin+k,2] for j in range(nbin)]
             sigma = [sigtable[i*nbin**2+j*nbin+k] for j in range(nbin)]
             plt.plot(vel,sigma)
             plt.show()
-    '''
+    #'''
 
     # checking lensing cross section against lens redshift
     '''
