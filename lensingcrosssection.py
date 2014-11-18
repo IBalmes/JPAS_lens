@@ -15,7 +15,7 @@ def main():
     Arguments:
     Outputs:
     """
-    nbin = 40
+    nbin = 60
     nbinM = 100
     
     maxmag = -20
@@ -40,7 +40,7 @@ def main():
             for v in vel:
                 gl.write_initfile(v,zl,zs)
                 os.system('./script_gl > /dev/null 2>&1')
-                sigma = gl.analyse_output(mag,zs)
+                sigma = gl.analyse_output(mag,zs,zl,v)
                 for i in range(nbinM):
                     line = str(zs)+' '+str(zl)+' '+str(v)+' '+str(mag[i])+' '\
                            +str(sigma[i])+'\n'
