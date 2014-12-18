@@ -64,7 +64,7 @@ def test():
         points[i,3] = float(lines[i].split()[3])
         sigtable[i] = float(lines[i].split()[4])
 
-    nbin = 20
+    nbin = 60
     npts = nline/nbin
 
     # checking lensing cross section against magnitude
@@ -76,18 +76,19 @@ def test():
     npts = npts/nbin
 
     # checking lensing cross section against velocity dispersion
-    #'''
-    for i in range(npts):
-        for k in range(nbin):
-            vel = [points[i*nbin**2+j*nbin+k,2] for j in range(nbin)]
-            sigma = [sigtable[i*nbin**2+j*nbin+k] for j in range(nbin)]
-            plt.plot(vel,sigma)
-            plt.show()
-    #'''
-
-    # checking lensing cross section against lens redshift
     '''
     for i in range(nline):
+        mask, = np.where((points[:,1]==points[i,1])&(points[:,0]==points[i,0])\
+                        &(points[:,3]==points[i,3]))
+        vel = points[mask,2]
+        sigma = sigtable[mask]
+        plt.plot(vel,sigma)
+        plt.show()
+    '''
+
+    # checking lensing cross section against lens redshift
+    #'''
+    for i in range(3000,nline):
         mask, = np.where((points[:,1]==points[i,1])&(points[:,2]==points[i,2])\
                         &(points[:,3]==points[i,3]))
         print mask
@@ -95,7 +96,7 @@ def test():
         sigma = sigtable[mask]
         plt.plot(zl,sigma)
         plt.show()
-    '''
+    #'''
 
     # checking lensing cross section against source redshift
     for i in reversed(range(nline)):

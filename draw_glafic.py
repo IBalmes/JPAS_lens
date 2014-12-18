@@ -190,7 +190,7 @@ def analyse_output(M,zs,zl,v,start=0):
         for i in range(nmult):
             # lumratio should naturally be a vector of length len(M)
             lumratio = lumfunction[i]/lumfunction_nomag
-            # sigma should also be a vector of lenght len(m)
+            # sigma should also be a vector of length len(m)
             sigma = sigma+lumratio/mu[i]
 
         # Wait... How does sigma have dimensions of area? 

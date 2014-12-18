@@ -79,32 +79,20 @@ def lensingcrosssection(v,zl,zs,M):
     """
     file = 'crosssection.dat'
     f = open(file,'r')
-    lines = f.readlines()
-    nline = len(lines)
-    points = np.zeros(shape=(nline,4))
-    sigtable = np.zeros(nline)
-    for i in range(nline):
-        points[i,0] = float(lines[i].split()[0])
-        points[i,1] = float(lines[i].split()[1])
-        points[i,2] = float(lines[i].split()[2])
-        points[i,3] = float(lines[i].split()[3])
-        sigtable[i] = float(lines[i].split()[4])
+    zltab = []
+    zstab = []
+    Mtab = []
+    vtab = []
+    sigtable = []
+    for line in f:
+        zstab.append(float(line.split()[0]))
+        zltab.append(float(line.split()[1]))
+        vtab.append(float(line.split()[2]))
+        Mtab.append(float(line.split()[3]))
+        sigtable.append(float(line.split()[4]))
 
-    sigma = griddata(points, sigtable, (zs,zl,v,M), method='nearest')
-
-    # while crosssection.dat has not been updated...
-    nlens = 500#00
-
-    c = 299792.458 # km/s
-    arcsectorad = 4.85e-6
-    thetaE = 4*np.pi*(v/c)**2*distance(zs,zl)/distance(zs)
-    # the above formula gives thetaE in radian
-    # converting to arcseconds
-    thetaE = thetaE/arcsectorad
-    # this is the area in the source plane being probed by the MCMC code
-    area = 4*thetaE**2
-
-    sigma = sigma*area/nlens #!this is actually wrong... need to know nmult?
+    sigma = griddata((zstab,zltab,vtab,Mtab), sigtable, (zs,zl,v,M),\
+                     method='nearest')
 
     return sigma
 
