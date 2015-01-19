@@ -77,7 +77,7 @@ def lensingcrosssection(v,zl,zs,M):
     Outputs:
     sigma -- biased lensing cross-section, precomputed with gravlens.
     """
-    file = 'crosssection.dat'
+    """file = 'crosssection.dat'
     f = open(file,'r')
     zltab = []
     zstab = []
@@ -89,7 +89,15 @@ def lensingcrosssection(v,zl,zs,M):
         zltab.append(float(line.split()[1]))
         vtab.append(float(line.split()[2]))
         Mtab.append(float(line.split()[3]))
-        sigtable.append(float(line.split()[4]))
+        sigtable.append(float(line.split()[4]))"""
+
+    result = np.load('crosssection.npz')
+
+    zstab = result[0]
+    zltab = result[1]
+    vtab = result[2]
+    Mtab = result[3]
+    sigtable = result[4]
 
     sigma = griddata((zstab,zltab,vtab,Mtab), sigtable, (zs,zl,v,M),\
                      method='nearest')

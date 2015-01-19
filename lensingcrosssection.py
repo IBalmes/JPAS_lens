@@ -15,8 +15,8 @@ def main():
     Arguments:
     Outputs:
     """
-    nbin = 6#0
-    nbinM = 10#0
+    nbin = 60
+    nbinM = 100
     
     maxmag = -20
     minmag = -29
