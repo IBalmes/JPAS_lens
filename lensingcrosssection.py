@@ -15,8 +15,8 @@ def main():
     Arguments:
     Outputs:
     """
-    nbin = 60
-    nbinM = 100
+    nbin = 6#0
+    nbinM = 10#0
     
     maxmag = -20
     minmag = -29
@@ -31,9 +31,9 @@ def main():
     
     # writing the script for galfic once and for all
     gl.write_script()
+
+    result = [[] for i in range(5)]
     
-    file = 'crosssection.dat'
-    f = open(file,'w')
     for zl in z:
         zrange = z[np.where(z > zl)]
         for zs in zrange:
@@ -42,11 +42,13 @@ def main():
                 os.system('./script_gl > /dev/null 2>&1')
                 sigma = gl.analyse_output(mag,zs,zl,v)
                 for i in range(nbinM):
-                    line = str(zs)+' '+str(zl)+' '+str(v)+' '+str(mag[i])+' '\
-                           +str(sigma[i])+'\n'
-                    f.write(line)
+                    result[0].append(zs)
+                    result[1].append(zl)
+                    result[2].append(v)
+                    result[3].append(mag[i])
+                    result[4].append(sigma[i])
 
-    f.close()
+    np.savez('crosssection.npz',x=result)
 
 def test():
     """Test the smoothness of the function in all directions"""

@@ -4,6 +4,7 @@ init_gl/
 script_gl
 glafic
 out_point.dat
-crosssection.dat
+crosssection.*
 cross_test.dat
 crosssection_bin.dat
+example_rodrigo
