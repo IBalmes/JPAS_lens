@@ -93,11 +93,11 @@ def lensingcrosssection(v,zl,zs,M):
 
     result = np.load('crosssection.npz')
 
-    zstab = result[0]
-    zltab = result[1]
-    vtab = result[2]
-    Mtab = result[3]
-    sigtable = result[4]
+    zstab = result['x'][0]
+    zltab = result['x'][1]
+    vtab = result['x'][2]
+    Mtab = result['x'][3]
+    sigtable = result['x'][4]
 
     sigma = griddata((zstab,zltab,vtab,Mtab), sigtable, (zs,zl,v,M),\
                      method='nearest')
