@@ -6,7 +6,7 @@ import draw_glafic as gl
 import lens as l
 import os
 
-def write_initfile(nlens,thetaE,zl,zs,ell=True):
+def write_initfile(nlens,thetaE,zl,zs,ell=True,SIS=False):
     """Write the initial files for gravlens for a given Einstein radius.
 
     Arguments:
@@ -15,6 +15,7 @@ def write_initfile(nlens,thetaE,zl,zs,ell=True):
     zl -- lens redshift
     zs -- source redshift
     ell -- if True, lenses are elliptical. If False, spherical. Default True.
+    SIS -- if True, lenses are all SIS. If False, slope varies. Default False.
     Outputs:
     tonnes of files
     """
@@ -26,6 +27,13 @@ def write_initfile(nlens,thetaE,zl,zs,ell=True):
     e,gamma,theta_g,x,y = gl.draw_lensparam(nlens,thetaE)
     if not ell:
         e = e*0
+    if SIS:
+        slope = e*0+2
+    else:
+        slope = rand.normal(2,0.3,nlens)
+        for i in range(nlens):
+            while ((slope[i]<=1) or (slope[i]>=3)):
+                slope[i] = rand.normal(2,0.3)
 
     for i in range(nlens):
         file = 'init_test/lens_'+str(i)+'.in'
@@ -40,9 +48,9 @@ def write_initfile(nlens,thetaE,zl,zs,ell=True):
         f.write('\n')
         f.write('#defining the lens model\n')
         f.write('startup 1 0 1\n')
-        #line = 'lens powpot '+str(zs)+' 0 0 '+str(e[i])+' 0 '+str(thetaE)+\
-        #       ' 2\n'
-        line = 'lens nfwpot 1e14 0 0 '+str(e[i])+' 0 5 0\n'
+        line = 'lens powpot '+str(zs)+' 0 0 '+str(e[i])+' 0 '+str(thetaE)+\
+                ' '+str(slope[i])+'\n'
+        #line = 'lens nfwpot 1e14 0 0 '+str(e[i])+' 0 5 0\n'
         f.write(line)
         line = 'point '+str(zs)+' '+str(x[i])+' '+str(y[i])+'\n'
         f.write(line)
@@ -67,7 +75,7 @@ def write_script(nlens):
                +str(i)+'.out\n'
         f.write(line)
 
-def run(nlens,thetaE,zl,zs,ell=True):
+def run(nlens,thetaE,zl,zs,ell=True,SIS=False):
     """Creates the init files and runs the glafic script.
 
     Arguments:
@@ -76,8 +84,9 @@ def run(nlens,thetaE,zl,zs,ell=True):
     zl -- lens redshift
     zs -- source redshift
     ell -- if True, lenses are elliptical. If False, spherical. Default True.
+    SIS -- if True, lenses are all SIS. If False, slope varies. Default False.
     """
-    write_initfile(nlens,thetaE,zl,zs,ell)
+    write_initfile(nlens,thetaE,zl,zs,ell,SIS)
     os.system('./script_test > /dev/null 2>&1')
     
 def analyze(nlens):
@@ -109,11 +118,12 @@ def analyze(nlens):
             image2 = f.readline()
             image3 = f.readline()
             angle12 = computeangle(image1,image2)
-            sep.append(angle12)
+            #sep.append(angle12)
             angle13 = computeangle(image1,image3)
-            sep.append(angle13)
+            #sep.append(angle13)
             angle23 = computeangle(image2,image3)
-            sep.append(angle23)
+            #sep.append(angle23)
+            sep.append(max(angle12,angle13,angle23))
             nmult = nmult+1
         if image_number == 4:
             # quad lens case
@@ -122,17 +132,18 @@ def analyze(nlens):
             image3 = f.readline()
             image4 = f.readline()
             angle12 = computeangle(image1,image2)
-            sep.append(angle12)
+            #sep.append(angle12)
             angle13 = computeangle(image1,image3)
-            sep.append(angle13)
+            #sep.append(angle13)
             angle14 = computeangle(image1,image4)
-            sep.append(angle14)
+            #sep.append(angle14)
             angle23 = computeangle(image2,image3)
-            sep.append(angle23)
+            #sep.append(angle23)
             angle24 = computeangle(image2,image4)
-            sep.append(angle24)
+            #sep.append(angle24)
             angle34 = computeangle(image3,image4)
-            sep.append(angle34)
+            #sep.append(angle34)
+            sep.append(max(angle12,angle13,angle14,angle23,angle24,angle34))
             nmult = nmult+1
 
     print nmult
@@ -169,17 +180,26 @@ def main(nlens,thetaE,zl,zs):
     Outputs:
     """
     write_script(nlens)
+
     # running with ellipticity in the lens
-    run(nlens,thetaE,zl,zs)
+    run(nlens,thetaE,zl,zs,SIS=True)
     angle_ell = analyze(nlens)
     np.savez('angle_ell.npz',x=angle_ell)
 
-    # running without ellipticity
+    # running with various slopes, no ellipticity
     run(nlens,thetaE,zl,zs,ell=False)
-    angle_noell = analyze(nlens)
+    angle_noSIS = analyze(nlens)
+    np.savez('angle_noSIS.npz',x=angle_noSIS)
+
+    # running without ellipticity
+    run(nlens/3,thetaE,zl,zs,ell=False,SIS=True)
+    angle_noell = analyze(nlens/3)
     np.savez('angle_noell.npz',x=angle_noell)
 
-    angles = [angle_ell,angle_noell]
+    angles = [angle_ell,angle_noell,angle_noSIS]
 
-    plt.hist(angles,50,histtype='bar')
+    plt.hist(angles,100,histtype='bar',color=['r','b','g'],
+             label=['elliptical','SIS','spherical'])
+    plt.legend(loc="upper left")
+    plt.xlabel(r"separation angle ('') for $\theta_E = 1 ''$")
     plt.show()
