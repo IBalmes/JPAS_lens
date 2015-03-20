@@ -8,3 +8,6 @@ crosssection.*
 cross_test.dat
 crosssection_bin.dat
 example_rodrigo
+*.npz
+init_test/
+script_test
