@@ -9,7 +9,7 @@ def quasarluminosity(M,z):
 
     The magnitude here is the absolute i-band magnitude.
     Arguments:
-    M -- absolute magnitude at which to do the computation.
+    M -- ABSOLUTE magnitude at which to do the computation.
     z -- redshift of the quasars.
     Outputs:
     diff -- dPhi/dM in absolute i-band magnitude.
@@ -40,6 +40,7 @@ def quasarluminosity(M,z):
 
     return diff
 
+
 def velocitydispersion(v):
     """Compute the velocity function of early-type galaxies.
 
@@ -65,6 +66,7 @@ def velocitydispersion(v):
 
     return diff
 
+
 def lensingcrosssection(v,zl,zs,M):
     """Find the biased lensing cross-section for v, zl, zs.
 
@@ -73,7 +75,7 @@ def lensingcrosssection(v,zl,zs,M):
     v -- velocity dispersion of the lens.
     zl -- redshift of the lens.
     zs -- redshift of the source.
-    M -- magnitude of the source.
+    M -- ABSOLUTE magnitude of the source.
     Outputs:
     sigma -- biased lensing cross-section, precomputed with gravlens.
     """
@@ -104,12 +106,13 @@ def lensingcrosssection(v,zl,zs,M):
 
     return sigma
 
-def lensingprobability(zs,M):
+
+def lensingprobability(zs,Mapp):
     """Compute the lensing probability for a QSO at redshift zs, magnitude M.
 
     Arguments:
     zs -- redshift of the source quasar.
-    M -- magnitude of the lensed quasar.
+    Mapp -- APPARENT magnitude of the lensed quasar.
     Outputs:
     p -- probability that the quasar is lensed.
     """
@@ -172,7 +175,10 @@ def lensingprobability(zs,M):
         # It seems that yes
         sigma_l = []
         for i in range(len(zl)):
-            a = lensingcrosssection(v[i],zl[i],zs,M)
+            # WARNING MAGNITUDE NEEDS TO BE CONVERTED TO ABSOLUTE MAGNITUDE
+            dist = distance(zl)
+            Mabs = Mapp-5*(np.log10(dist*1e6)-1)
+            a = lensingcrosssection(v[i],zl[i],zs,Mabs)
             sigma_l.append(a)
         sigma_l = np.array(sigma_l)
 
@@ -195,8 +201,9 @@ def lensingprobability(zs,M):
 
     return integral_theta
 
+
 def distance(z1,z2=0):
-    """Compute the angular diameter distance between redshifts z1 and z2.
+    """Compute the angular diameter distance between redshifts z1 and z2 in Mpc.
 
     If z2 has no explicit value, computes the distance between 0 and z1.
     Arguments:
@@ -224,12 +231,13 @@ def distance(z1,z2=0):
 
     return d
 
+
 def lensingbyredshift(zs,Mmax):
     """Compute the expected number of lenses in a slice of redshift.
 
     Arguments:
     zs -- source redshift.
-    Mmax -- maximum magnitude of the survey.
+    Mmax -- maximum APPARENT magnitude of the survey. Typically of order 23.
     Outputs:
     nlens -- dN/dzs, number of expected lenses by interval of source redshift.
     """
@@ -244,34 +252,38 @@ def lensingbyredshift(zs,Mmax):
 
     # the density of quasars there should be below 1e-9 per
     # magnitude per Mpc^3.
-    # M is the magnitude of the lensed quasar.
-    M = np.arange(nbin)*(Mmax-Mmin)/(nbin-1)+Mmin
-    
+    # M is the APPARENT magnitude of the lensed quasar.
+    Mapp = np.arange(nbin)*(Mmax-Mmin)/(nbin-1)+Mmin
+    # the magnitude has to be converted to ABSOLUTE
+    dist = distance(zs) # in Mpc
+    Mabs = Mapp-5*(np.log10(dist*1e6)-1)
+
     # luminosity function
-    luminosity = quasarluminosity(M,zs)
+    luminosity = quasarluminosity(Mabs,zs)
     
     # volume factor
     area = 2.5 # survey area in steradian. 8000 to 9000 square degrees
-    dist = distance(zs)
     hs = h*100*np.sqrt(Omega_m*(1+zs)**3+Omega_L*(1+zs)**(-3*(1+w)))
     volume = area*dist**2*(1+zs)**2*c/hs
     
     p = []
-    for mag in M:
+    for mag in Mapp:
+        # lensingprobability takes the APPARENT magnitude as input.
         p.append(lensingprobability(zs,mag))
     
     integrand = luminosity*volume*p
 
-    nlens = np.trapz(integrand,M)
+    nlens = np.trapz(integrand,Mapp)
     
     return nlens
+
 
 def numberoflenses(zmax,Mmax):
     """Compute the total number of lenses expected in the JPAS survey.
 
     Arguments:
     zmax -- maximum redshift at which objects will be detected. ~6
-    Mmax -- maximum magnitude at which objects will be detected.
+    Mmax -- maximum APPARENT magnitude at which objects will be detected.
     Outputs:
     N -- number of lenses expected to be observed by JPAS.
     """
