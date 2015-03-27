@@ -125,7 +125,7 @@ def lensingprobability(zs,M):
     arcsectorad = 4.85e-6
 
     # integration over Theta
-    nbin_theta = 100
+    nbin_theta = 10#0
     theta_min = 1. # PSF of JPAS is about 1 arcsecond
     theta_max = 4. # we don't expect new lenses 
                   # with separation above 4 arcseconds
@@ -139,7 +139,7 @@ def lensingprobability(zs,M):
 
     # for the integration over redshift zl
     # quantities independant from theta
-    nbin = 100
+    nbin = 10#0
     # in order to avoid nans (dls = 0), zl must never be equal to zs
     zl = np.arange(nbin)*np.float(zs)/nbin
 
@@ -171,25 +171,27 @@ def lensingprobability(zs,M):
         # can lensingcrosssection take an array for zl???
         # It seems that yes
         sigma_l = []
-        for z in zl:
-            sigma_l.append(lensingcrosssection(v,z,zs,M))
+        for i in range(len(zl)):
+            a = lensingcrosssection(v[i],zl[i],zs,M)
+            sigma_l.append(a)
         sigma_l = np.array(sigma_l)
 
         # result of the integration over the redshift
         integrand_z = volume*vdisp*diffvtheta*sigma_l 
         integral = np.trapz(integrand_z,zl)
 
-#        print integral
-#        plt.plot(zl,integrand_z)
-#        plt.show()
+        #print integral
+        #plt.plot(zl,integrand_z)
+        #plt.show()
 
         integrand.append(integral)
 
     integral_theta = np.trapz(integrand,theta)
 
-#    print integral_theta
-#    plt.plot(theta,integrand)
-#    plt.show()
+    #print integral_theta
+    #print 'integrand, theta'
+    #plt.plot(theta,integrand)
+    #plt.show()
 
     return integral_theta
 
@@ -231,7 +233,7 @@ def lensingbyredshift(zs,Mmax):
     Outputs:
     nlens -- dN/dzs, number of expected lenses by interval of source redshift.
     """
-    nbin = 200
+    nbin = 10#200
     Mmin = -30. 
     # cosmological parameters
     Omega_m = 0.3
@@ -273,7 +275,7 @@ def numberoflenses(zmax,Mmax):
     Outputs:
     N -- number of lenses expected to be observed by JPAS.
     """
-    nbin = 20
+    nbin = 10#20
     zmin = 0.1 #zs must not be 0
     zs = zmin+np.arange(nbin)*np.float(zmax-zmin)/(nbin-1)
     
@@ -283,6 +285,10 @@ def numberoflenses(zmax,Mmax):
         integrand.append(lensingbyredshift(z,Mmax))
         k = k+1
         print k,'/',nbin
+
+    plt.plot(zs,integrand)
+    plt.show()
+
     N = np.trapz(integrand,zs)
 
     return N
