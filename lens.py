@@ -4,6 +4,19 @@ import numpy as np
 import math as math
 from scipy.interpolate import griddata
 
+"""Note:
+A quasar absolute magnitude is typically between -29 and -20.
+Here is a table translating that to apparent magnitude, function of redshift:
+redshift // min app mag (-29) // max app mag (-20)
+0 // -29 // -20
+0.1 // 8.8 // 17.8
+0.3 // 10.8 // 19.8
+0.5 // 11.4 // 20.4 
+1 // 12 // 21
+2 // 12.1 // 21.1
+3 // 11.9 // 20.9
+"""
+
 def quasarluminosity(M,z):
     """Compute dPhi/dM for QSOs at redshift z.
 
@@ -176,7 +189,7 @@ def lensingprobability(zs,Mapp):
         sigma_l = []
         for i in range(len(zl)):
             # WARNING MAGNITUDE NEEDS TO BE CONVERTED TO ABSOLUTE MAGNITUDE
-            dist = distance(zl)
+            dist = distance(zs)
             Mabs = Mapp-5*(np.log10(dist*1e6)-1)
             a = lensingcrosssection(v[i],zl[i],zs,Mabs)
             sigma_l.append(a)
