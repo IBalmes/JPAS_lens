@@ -90,7 +90,8 @@ def lensingcrosssection(v,zl,zs,M):
     zs -- redshift of the source.
     M -- ABSOLUTE magnitude of the source.
     Outputs:
-    sigma -- biased lensing cross-section, precomputed with gravlens.
+    sigma -- biased lensing cross-section, precomputed with gravlens, in square
+    radians
     """
     """file = 'crosssection.dat'
     f = open(file,'r')
@@ -191,8 +192,10 @@ def lensingprobability(zs,Mapp):
             # WARNING MAGNITUDE NEEDS TO BE CONVERTED TO ABSOLUTE MAGNITUDE
             dist = distance(zs)
             Mabs = Mapp-5*(np.log10(dist*1e6)-1)
+            # a is in square radian
             a = lensingcrosssection(v[i],zl[i],zs,Mabs)
-            sigma_l.append(a)
+            # sigma_l is in Mpc/h
+            sigma_l.append(a*dist**2)
         sigma_l = np.array(sigma_l)
 
         # result of the integration over the redshift
@@ -223,7 +226,7 @@ def distance(z1,z2=0):
     z1 -- final redshift. Mandatory argument. 
     z2 -- initial redshift. Optional argument, default value 0.
     Outputs:
-    D -- angular diameter distance from z1 to z2.
+    D -- angular diameter distance from z1 to z2 in Mpc/h.
     """
     # cosmological parameters
     Omega_m = 0.3

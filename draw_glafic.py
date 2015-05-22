@@ -186,16 +186,16 @@ def analyse_output(M,zs,zl,v,start=0):
         lumfunction = l.quasarluminosity(mag,zs)
         lumfunction_nomag = l.quasarluminosity(M,zs)
         
-        sigma = 0
+        sigma = np.zeros(len(M))
         for i in range(nmult):
             # lumratio should naturally be a vector of length len(M)
             lumratio = lumfunction[i]/lumfunction_nomag
             # sigma should also be a vector of length len(m)
             sigma = sigma+lumratio/mu[i]
 
-        # Wait... How does sigma have dimensions of area? 
-        # How is it the right units? 
+        # sigma is now in square radians 
         sigma = sigma*area/nlens
+        # it will have to be converted to (Mpc/h)**2 through ds
 
     return sigma
 
