@@ -25,7 +25,7 @@ def quasarluminosity(M,z):
     M -- ABSOLUTE magnitude at which to do the computation.
     z -- redshift of the quasars.
     Outputs:
-    diff -- dPhi/dM in absolute i-band magnitude.
+    diff -- dPhi/dM in absolute i-band magnitude in (h/Mpc)**3.
     """
     # parameters of the fonction
     Phi_star = 5.34e-6 # units (h/Mpc)^3
@@ -48,8 +48,7 @@ def quasarluminosity(M,z):
     diff = Phi_star/(10**(0.4*(alpha+1)*(M-M_star)) \
                      +10**(0.4*(beta+1)*(M-M_star)))
 
-    # the result is in h**3/mag/Mpc**3. Is it necessary to multiply it by h**3 
-    # before using it???
+    # the result is in (h/Mpc)**3.
 
     return diff
 
@@ -58,9 +57,9 @@ def velocitydispersion(v):
     """Compute the velocity function of early-type galaxies.
 
     Arguments:
-    v -- velocity at which to compute the number of galaxies.
+    v -- velocity at which to compute the number of galaxies in km/s.
     Outputs:
-    diff -- number density of lenses at v.
+    diff -- number density of lenses at v in 1/(Mpc/h)^3/(km/s).
     """
     # parameters
     Phi_star = 8e-3 # units (h/Mpc)^3
@@ -69,13 +68,14 @@ def velocitydispersion(v):
     beta = 2.67
 
     x = v/v_star
-    norm = Phi_star*beta/math.gamma(alpha/beta)
+    norm = Phi_star*beta/math.gamma(alpha/beta) # units (h/Mpc)^3 
 
-    diff = norm*(x**alpha)*np.exp(-(x**beta))/v
+    diff = norm*(x**alpha)*np.exp(-(x**beta))/v # units 1/(Mpc/h)^3/(km/s)
 
     # There seems to be a factor 3 difference between this and 
     # the result in Choi et al 2007. WHY???
     # It also appears to drop much too quickly.
+    # -> Choi et al 2007 plot the log function, so diff*v*np.log(10).
 
     return diff
 
@@ -93,20 +93,6 @@ def lensingcrosssection(v,zl,zs,M):
     sigma -- biased lensing cross-section, precomputed with gravlens, in square
     radians
     """
-    """file = 'crosssection.dat'
-    f = open(file,'r')
-    zltab = []
-    zstab = []
-    Mtab = []
-    vtab = []
-    sigtable = []
-    for line in f:
-        zstab.append(float(line.split()[0]))
-        zltab.append(float(line.split()[1]))
-        vtab.append(float(line.split()[2]))
-        Mtab.append(float(line.split()[3]))
-        sigtable.append(float(line.split()[4]))"""
-
     result = np.load('crosssection.npz')
 
     zstab = result['x'][0]
@@ -135,14 +121,14 @@ def lensingprobability(zs,Mapp):
     Omega_m = 0.3
     Omega_L = 1-Omega_m
     w = -1
-    h = 0.72 # *100 km/s.Mpc = Hubble's constant
+    h = 0.72 # *100 km/s/Mpc = Hubble's constant
     c = 299792.458 # km/s
 
     # conversion from arcseconds to radian
     arcsectorad = 4.85e-6
 
     # integration over Theta
-    nbin_theta = 10#0
+    nbin_theta = 30
     theta_min = 1. # PSF of JPAS is about 1 arcsecond
     theta_max = 4. # we don't expect new lenses 
                   # with separation above 4 arcseconds
@@ -156,12 +142,13 @@ def lensingprobability(zs,Mapp):
 
     # for the integration over redshift zl
     # quantities independant from theta
-    nbin = 10#0
+    nbin = 30
     # in order to avoid nans (dls = 0), zl must never be equal to zs
     zl = np.arange(nbin)*np.float(zs)/nbin
 
-    hl = h*100*np.sqrt(Omega_m*(1+zl)**3+Omega_L*(1+zl)**(-3*(1+w)))
-    volume = (1+zl)**2*c/hl
+    hl = 100*np.sqrt(Omega_m*(1+zl)**3+Omega_L*(1+zl)**(-3*(1+w))) 
+    # hl in km/s/(Mpc/h)
+    volume = (1+zl)**2*c/hl # in Mpc/h
 
     ds = distance(zs)
     dls = []
@@ -175,14 +162,14 @@ def lensingprobability(zs,Mapp):
         # Einstein radius relation
         # Theta_E = 4pi(v/c)**2*D_ls/D_s
         # Therefore dv/dTheta is given by the following relation
-        diffvtheta = c/2*np.sqrt(ds/(4*np.pi*dls*t))
+        diffvtheta = c/2*np.sqrt(ds/(4*np.pi*dls*t)) # in km/s
 
         # velocity corresponding to the given theta
         # same units as c, km/s
-        v = c*np.sqrt(ds*t/(4*np.pi*dls))
+        v = c*np.sqrt(ds*t/(4*np.pi*dls)) # km/s
         # dv corresponding to dtheta
         #dv = diffvtheta*dtheta
-        vdisp = velocitydispersion(v)#,dv)
+        vdisp = velocitydispersion(v)#,dv) # km/s/(Mpc/h)**3
 
         # biased lensing cross-section
         # can lensingcrosssection take an array for zl???
@@ -226,13 +213,13 @@ def distance(z1,z2=0):
     z1 -- final redshift. Mandatory argument. 
     z2 -- initial redshift. Optional argument, default value 0.
     Outputs:
-    D -- angular diameter distance from z1 to z2 in Mpc/h.
+    d -- angular diameter distance from z1 to z2 in Mpc/h.
     """
     # cosmological parameters
     Omega_m = 0.3
     Omega_L = 1-Omega_m
     w = -1
-    h = 0.72 # *100 km/s.Mpc = Hubble's constant
+    h = 0.72 # *100 km/s/Mpc = Hubble's constant
     c = 299792.458 # km/s
 
     astart = 1./(1+z1)
@@ -243,7 +230,7 @@ def distance(z1,z2=0):
     a = astart+np.arange(nbin)*(aend-astart)/(nbin-1)
     rgral = np.sqrt(Omega_m*a+Omega_L*a**(3*(1+w)+4))
 
-    d = np.trapz(1./rgral,x=a)*astart*c/(100*h) #in Mpc
+    d = np.trapz(1./rgral,x=a)*astart*c #in Mpc/h
 
     return d
 
@@ -271,16 +258,16 @@ def lensingbyredshift(zs,Mmax):
     # M is the APPARENT magnitude of the lensed quasar.
     Mapp = np.arange(nbin)*(Mmax-Mmin)/(nbin-1)+Mmin
     # the magnitude has to be converted to ABSOLUTE
-    dist = distance(zs) # in Mpc
+    dist = distance(zs) # in Mpc/h
     Mabs = Mapp-5*(np.log10(dist*1e6)-1)
 
     # luminosity function
-    luminosity = quasarluminosity(Mabs,zs)
+    luminosity = quasarluminosity(Mabs,zs) # in (Mpc/h)**-3
     
     # volume factor
     area = 2.5 # survey area in steradian. 8000 to 9000 square degrees
-    hs = h*100*np.sqrt(Omega_m*(1+zs)**3+Omega_L*(1+zs)**(-3*(1+w)))
-    volume = area*dist**2*(1+zs)**2*c/hs
+    hs = 100*np.sqrt(Omega_m*(1+zs)**3+Omega_L*(1+zs)**(-3*(1+w)))
+    volume = area*dist**2*(1+zs)**2*c/hs # in Mpc/h
     
     p = []
     for mag in Mapp:

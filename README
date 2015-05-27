@@ -8,6 +8,8 @@ lens.py: python routine to compute the number of lensed qsos.
 
 lensingcrosssection.py: runs all the routine to output a table of biased lensing cross-sections as a function of magnitude and redshift of the source, velocity dispersion and redshift of the lens.
 
+test_separation.py: for Valerio Mara, testing the resulting angular separation from different lens profiles.
+
 Started 09/2014 in Sao Paulo
 Irene Balmes
 contact: irene.balmes@normalesup.org

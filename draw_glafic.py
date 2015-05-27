@@ -127,6 +127,10 @@ def analyse_output(M,zs,zl,v,start=0):
     area = 4*thetaE**2
 
     # array containing the magnification, and number of multiply imaged lenses
+    # the multiply imaged source is taken into account only if the angular
+    # separation is larger than the PSF
+    theta_min = 1. # PSF of JPAS is about 1 arcsecond
+
     mu = []
     mutmp = []
     nmult = 0
@@ -139,40 +143,53 @@ def analyse_output(M,zs,zl,v,start=0):
             # double lens case
             image1 = f.readline()
             image2 = f.readline()
-            mutmp.append(abs(float(image1.split()[8])))
-            mutmp.append(abs(float(image2.split()[8])))
-            mutmp.sort()
-            #if mutmp[0]/mutmp[1]>0.1: 
-            # in the end, no condition is necessary there
-            nmult = nmult+1
-            mu.append(mutmp[0]) # faintest image
-            mutmp = []
+            angle12 = computeangle(image1,image2)
+            if (angle12 >= theta_min):
+                mutmp.append(abs(float(image1.split()[8])))
+                mutmp.append(abs(float(image2.split()[8])))
+                mutmp.sort()
+                nmult = nmult+1
+                mu.append(mutmp[0]) # faintest image
+                mutmp = []
         if image_number == 3:
             # naked cusp case
             image1 = f.readline()
             image2 = f.readline()
             image3 = f.readline()
-            mutmp.append(abs(float(image1.split()[8])))
-            mutmp.append(abs(float(image2.split()[8])))
-            mutmp.append(abs(float(image3.split()[8])))
-            mutmp.sort()
-            nmult = nmult+1
-            mu.append(mutmp[0]) # third brightest image
-            mutmp = []
+            angle12 = computeangle(image1,image2)
+            angle13 = computeangle(image1,image3)
+            angle23 = computeangle(image2,image3)
+            angle = max(angle12,angle13,angle23)
+            if (angle >= theta_min):
+                mutmp.append(abs(float(image1.split()[8])))
+                mutmp.append(abs(float(image2.split()[8])))
+                mutmp.append(abs(float(image3.split()[8])))
+                mutmp.sort()
+                nmult = nmult+1
+                mu.append(mutmp[0]) # third brightest image
+                mutmp = []
         if image_number == 4:
             # quad lens case
             image1 = f.readline()
             image2 = f.readline()
             image3 = f.readline()
             image4 = f.readline()
-            mutmp.append(abs(float(image1.split()[8])))
-            mutmp.append(abs(float(image2.split()[8])))
-            mutmp.append(abs(float(image3.split()[8])))
-            mutmp.append(abs(float(image4.split()[8])))
-            mutmp.sort()
-            nmult = nmult+1
-            mu.append(mutmp[1]) # third brightest image
-            mutmp = []
+            angle12 = computeangle(image1,image2)
+            angle13 = computeangle(image1,image3)
+            angle14 = computeangle(image1,image4)
+            angle23 = computeangle(image2,image3)
+            angle24 = computeangle(image2,image4)
+            angle34 = computeangle(image3,image4)
+            angle = max(angle12,angle13,angle14,angle23,angle24,angle34)
+            if (angle >= theta_min):
+                mutmp.append(abs(float(image1.split()[8])))
+                mutmp.append(abs(float(image2.split()[8])))
+                mutmp.append(abs(float(image3.split()[8])))
+                mutmp.append(abs(float(image4.split()[8])))
+                mutmp.sort()
+                nmult = nmult+1
+                mu.append(mutmp[1]) # third brightest image
+                mutmp = []
 
     if nmult==0:
         sigma = np.zeros(len(M))
@@ -216,3 +233,19 @@ def error_on_sigma(M,zs):
     plt.show()
 
     return sigma
+
+def computeangle(image1,image2):
+    """Compute the separation angle between two images.
+
+    Arguments:
+    image1,image2 -- strings, outputs of glafic.
+    Outputs:
+    angle -- separation angle between the two images.
+    """
+    x1 = float(image1.split()[2])
+    y1 = float(image1.split()[5])
+    x2 = float(image2.split()[2])
+    y2 = float(image2.split()[5])
+    angle = np.sqrt((x1-x2)**2+(y1-y2)**2)
+
+    return angle
