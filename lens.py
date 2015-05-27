@@ -127,21 +127,17 @@ def lensingprobability(zs,Mapp):
     # conversion from arcseconds to radian
     arcsectorad = 4.85e-6
 
-    # integration over Theta
-    nbin_theta = 30
-    theta_min = 1. # PSF of JPAS is about 1 arcsecond
-    theta_max = 4. # we don't expect new lenses 
-                  # with separation above 4 arcseconds
-    theta = theta_min+np.arange(nbin_theta)*(theta_max-theta_min)/(nbin_theta-1)
-    # theta in radians
-    theta = arcsectorad*theta
-    #dtheta = theta[1]-theta[0]
+    # integration over velocity dispersion
+    nbin_v = 30
+    minv = 10**1.6
+    maxv = 10**2.6
+    vel = np.linspace(minv,maxv,nbin_v)
 
-    # this array will contain the function to integrate over theta
+    # this array will contain the function to integrate over v
     integrand = []
 
     # for the integration over redshift zl
-    # quantities independant from theta
+    # quantities independant from v
     nbin = 30
     # in order to avoid nans (dls = 0), zl must never be equal to zs
     zl = np.arange(nbin)*np.float(zs)/nbin
@@ -156,20 +152,8 @@ def lensingprobability(zs,Mapp):
         dls.append(distance(zs,z))
     dls = np.array(dls)
 
-    for t in theta:
-        # The relation between the velocity dispersion
-        # and the angular separation comes (I assume) from the 
-        # Einstein radius relation
-        # Theta_E = 4pi(v/c)**2*D_ls/D_s
-        # Therefore dv/dTheta is given by the following relation
-        diffvtheta = c/2*np.sqrt(ds/(4*np.pi*dls*t)) # in km/s
-
-        # velocity corresponding to the given theta
-        # same units as c, km/s
-        v = c*np.sqrt(ds*t/(4*np.pi*dls)) # km/s
-        # dv corresponding to dtheta
-        #dv = diffvtheta*dtheta
-        vdisp = velocitydispersion(v)#,dv) # km/s/(Mpc/h)**3
+    for v in vel:
+        vdisp = velocitydispersion(v) # km/s/(Mpc/h)**3
 
         # biased lensing cross-section
         # can lensingcrosssection take an array for zl???
@@ -180,29 +164,20 @@ def lensingprobability(zs,Mapp):
             dist = distance(zs)
             Mabs = Mapp-5*(np.log10(dist*1e6)-1)
             # a is in square radian
-            a = lensingcrosssection(v[i],zl[i],zs,Mabs)
+            a = lensingcrosssection(v,zl[i],zs,Mabs)
             # sigma_l is in Mpc/h
             sigma_l.append(a*dist**2)
         sigma_l = np.array(sigma_l)
 
         # result of the integration over the redshift
-        integrand_z = volume*vdisp*diffvtheta*sigma_l 
+        integrand_z = volume*vdisp*sigma_l 
         integral = np.trapz(integrand_z,zl)
-
-        #print integral
-        #plt.plot(zl,integrand_z)
-        #plt.show()
 
         integrand.append(integral)
 
-    integral_theta = np.trapz(integrand,theta)
+    integral_vel = np.trapz(integrand,vel)
 
-    #print integral_theta
-    #print 'integrand, theta'
-    #plt.plot(theta,integrand)
-    #plt.show()
-
-    return integral_theta
+    return integral_vel
 
 
 def distance(z1,z2=0):
