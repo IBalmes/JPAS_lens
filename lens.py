@@ -124,9 +124,6 @@ def lensingprobability(zs,Mapp):
     h = 0.72 # *100 km/s/Mpc = Hubble's constant
     c = 299792.458 # km/s
 
-    # conversion from arcseconds to radian
-    arcsectorad = 4.85e-6
-
     # integration over velocity dispersion
     nbin_v = 30
     minv = 10**1.6
@@ -160,8 +157,8 @@ def lensingprobability(zs,Mapp):
         # It seems that yes
         sigma_l = []
         for i in range(len(zl)):
-            # WARNING MAGNITUDE NEEDS TO BE CONVERTED TO ABSOLUTE MAGNITUDE
             dist = distance(zs)
+            # converting magnitude to absolute magnitude
             Mabs = Mapp-5*(np.log10(dist*1e6)-1)
             # a is in square radian
             a = lensingcrosssection(v,zl[i],zs,Mabs)
